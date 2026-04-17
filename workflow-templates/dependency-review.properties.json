@@ -1,0 +1,8 @@
+{
+  "name": "Dependency Review",
+  "description": "Blocks PRs that introduce HIGH/CRITICAL dependency vulnerabilities or GPL/AGPL licenses. Required by org policy.",
+  "iconName": "shield-lock",
+  "categories": [
+    "Security"
+  ]
+}

@@ -1,62 +1,46 @@
-# Dependabot configuration for the marquee-ai org.
-# Installed centrally so per-repo additions are unnecessary.
-#
-# Strategy:
-#   - Daily security-only updates (lowest noise, fastest CVE response).
-#   - Weekly grouped non-security updates (one PR per ecosystem, low review cost).
-#   - Major bumps held back so we never get a surprise framework rewrite from a bot.
-#
-# OWASP Top 10 alignment:
-#   - A06 Vulnerable & Outdated Components: this is the primary mitigation.
-#   - A08 Software & Data Integrity Failures: dependabot writes lockfile updates,
-#     and our branch protection requires CI to pass before merge, which keeps
-#     the integrity chain unbroken.
-#
-# Reviewer:
-#   Auto-assigns @luiza-prog (security lead). Engineers can re-route on a per-PR
-#   basis. Minimum one human approval is required before merge (branch protection).
-
 version: 2
 
-# Anchors used to deduplicate config across multiple repos (parsed by Dependabot v2)
-x-defaults: &node-defaults
-  package-ecosystem: "npm"
-  schedule:
-    interval: "daily"
-  open-pull-requests-limit: 10
-  reviewers:
-    - "luiza-prog"
-  labels:
-    - "dependencies"
-    - "security"
-  commit-message:
-    prefix: "deps"
-    prefix-development: "deps-dev"
-    include: "scope"
-  ignore:
-    # Hold majors so the bot never proposes a framework rewrite on a Friday night.
-    - dependency-name: "*"
-      update-types:
-        - "version-update:semver-major"
+# OWASP A06 Vulnerable & Outdated Components — primary mitigation.
+# OWASP A08 Software & Data Integrity Failures — lockfile updates land
+# behind branch protection, keeping the integrity chain intact.
 
 updates:
-  # ===========================================================================
-  # Node / npm — application repos
-  # ===========================================================================
-  - <<: *node-defaults
+  # ---------------------------------------------------------------------------
+  # npm (production deps grouped, dev deps grouped) - daily
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "npm"
     directory: "/"
-    target-branch: "main"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "luiza-prog"
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       production-dependencies:
         dependency-type: "production"
-        update-types: ["minor", "patch"]
+        update-types:
+          - "minor"
+          - "patch"
       development-dependencies:
         dependency-type: "development"
-        update-types: ["minor", "patch"]
+        update-types:
+          - "minor"
+          - "patch"
 
-  # ===========================================================================
-  # GitHub Actions — every repo using composite actions
-  # ===========================================================================
+  # ---------------------------------------------------------------------------
+  # GitHub Actions - weekly
+  # ---------------------------------------------------------------------------
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -71,9 +55,9 @@ updates:
       prefix: "ci"
       include: "scope"
 
-  # ===========================================================================
-  # Docker / Containerfiles
-  # ===========================================================================
+  # ---------------------------------------------------------------------------
+  # Docker base images - weekly
+  # ---------------------------------------------------------------------------
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -84,8 +68,3 @@ updates:
     labels:
       - "docker"
       - "security"
-
-  # ===========================================================================
-  # Python repos (orchestrator etc.) - covered when this file is mirrored to
-  # those repos by the audit script. Documented here for visibility only.
-  # ===========================================================================

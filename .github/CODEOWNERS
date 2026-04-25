@@ -1,0 +1,28 @@
+# CODEOWNERS — auto-routes review for security-critical paths.
+# Format: <pattern> <owner> [<owner> ...]
+# Owners: GitHub usernames or @org/team slugs.
+
+# Default — at least one ops reviewer on everything
+*  @luiza-prog  @marquee-ai/devops
+
+# Security-sensitive infrastructure
+/.github/                @luiza-prog  @marquee-ai/devops
+/.github/workflows/      @luiza-prog  @marquee-ai/devops
+/.github/CODEOWNERS      @luiza-prog  @marquee-ai/prod-admins
+/.github/dependabot.yml  @luiza-prog  @marquee-ai/devops
+
+# Auth, sessions, API client, security headers
+**/auth/**               @luiza-prog  @marquee-ai/devops
+**/session.server.*      @luiza-prog  @marquee-ai/devops
+**/firebase*.server.*    @luiza-prog  @marquee-ai/devops
+**/firebase*.client.*    @luiza-prog  @marquee-ai/devops
+**/api/client.*          @luiza-prog  @marquee-ai/devops
+**/lib/api.*             @luiza-prog  @marquee-ai/devops
+**/headers.*             @luiza-prog  @marquee-ai/devops
+**/_headers              @luiza-prog  @marquee-ai/devops
+**/nginx*.conf           @luiza-prog  @marquee-ai/devops
+**/Dockerfile            @luiza-prog  @marquee-ai/devops
+**/docker-compose*.yml   @luiza-prog  @marquee-ai/devops
+
+# Production deletion / cutover
+/CUTOVER.md              @luiza-prog  @marquee-ai/prod-admins

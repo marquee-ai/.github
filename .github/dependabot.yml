@@ -1,0 +1,70 @@
+version: 2
+
+# OWASP A06 Vulnerable & Outdated Components — primary mitigation.
+# OWASP A08 Software & Data Integrity Failures — lockfile updates land
+# behind branch protection, keeping the integrity chain intact.
+
+updates:
+  # ---------------------------------------------------------------------------
+  # npm (production deps grouped, dev deps grouped) - daily
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "luiza-prog"
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions - weekly
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "luiza-prog"
+    labels:
+      - "ci"
+      - "security"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # ---------------------------------------------------------------------------
+  # Docker base images - weekly
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "luiza-prog"
+    labels:
+      - "docker"
+      - "security"

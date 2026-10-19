@@ -1,0 +1,78 @@
+name: pr-jira-link
+
+# Production policy: every PR targeting `main` or `dev` must reference a
+# Jira ticket from one of the allow-listed projects. The reference can
+# appear in:
+#   * the PR title          (e.g. "MA-123: fix login redirect")
+#   * the head branch name  (e.g. "MA-123-fix-login")
+#   * the PR body           (e.g. "Closes MAR-42")
+#
+# Allow-listed Jira projects: MA, MAR, MD, MH, MP, MR, OPS.
+#
+# Only PRs into `main` and `dev` are checked (MA-1152); every default branch is one of the two,
+# so the org ruleset that requires this check can never wait on a run that did not start.
+#
+# Bot PRs (Dependabot, github-actions, etc.) are exempt - they cannot be
+# expected to author Jira tickets and they are already covered by the
+# dependency-review and codeql-severity-gate checks.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+    branches: [main, dev]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  check:
+    name: pr-jira-link
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify PR is linked to a Jira ticket
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const actor = (pr.user && pr.user.login) || '';
+            const isBot = (pr.user && pr.user.type === 'Bot') ||
+                          actor.endsWith('[bot]') ||
+                          actor === 'dependabot' ||
+                          actor === 'github-actions';
+            if (isBot) {
+              core.notice(`Skipping Jira-link check for bot author: ${actor}`);
+              return;
+            }
+            const allowed = ['MA','MAR','MD','MH','MP','MR','OPS'];
+            const re = /\b([A-Z]{2,10})-(\d{1,6})\b/;
+            const haystacks = {
+              title:  pr.title || '',
+              branch: (pr.head && pr.head.ref) || '',
+              body:   pr.body  || '',
+            };
+            let matched = null;
+            let matchedIn = null;
+            for (const [where, text] of Object.entries(haystacks)) {
+              const m = text.match(re);
+              if (m && allowed.includes(m[1])) {
+                matched = m[0];
+                matchedIn = where;
+                break;
+              }
+            }
+            if (!matched) {
+              const allOf = Object.entries(haystacks)
+                .map(([k, v]) => `  ${k}: ${v.slice(0, 120) || '(empty)'}`)
+                .join('\n');
+              core.setFailed(
+                `PR is not linked to a Jira ticket.\n\n` +
+                `Add a ticket key like "MA-123" to the PR title, the branch ` +
+                `name, or the PR body.\n\n` +
+                `Allowed projects: ${allowed.join(', ')}\n\n` +
+                `Currently scanned:\n${allOf}`
+              );
+              return;
+            }
+            core.notice(`OK: PR linked to Jira ticket ${matched} (found in ${matchedIn}).`);

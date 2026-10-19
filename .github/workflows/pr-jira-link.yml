@@ -1,6 +1,6 @@
 name: pr-jira-link
 
-# Production policy: every PR must reference a
+# Production policy: every PR targeting `main` or `dev` must reference a
 # Jira ticket from one of the allow-listed projects. The reference can
 # appear in:
 #   * the PR title          (e.g. "MA-123: fix login redirect")
@@ -9,8 +9,8 @@ name: pr-jira-link
 #
 # Allow-listed Jira projects: MA, MAR, MD, MH, MP, MR, OPS.
 #
-# No branch filter on purpose: this check is required by an org ruleset (MA-1152), and a
-# required check that never ran on a PR (wrong base branch) would block the merge.
+# Only PRs into `main` and `dev` are checked (MA-1152); every default branch is one of the two,
+# so the org ruleset that requires this check can never wait on a run that did not start.
 #
 # Bot PRs (Dependabot, github-actions, etc.) are exempt - they cannot be
 # expected to author Jira tickets and they are already covered by the
@@ -19,6 +19,7 @@ name: pr-jira-link
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review]
+    branches: [main, dev]
 
 permissions:
   pull-requests: read
